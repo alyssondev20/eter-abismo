@@ -4,6 +4,9 @@
 
 /* Chave versionada para permitir evolução futura do formato salvo. */
 const STORAGE_KEY = "eter-abismo-character-v1";
+const FILE_HANDLE_DB = "eter-abismo-file-access";
+const FILE_HANDLE_STORE = "settings";
+const FILE_HANDLE_KEY = "character-save-file";
 
 /* Referências aos elementos acessados com frequência. */
 const characterForm = document.querySelector("#character-form");
@@ -22,6 +25,9 @@ let inventory = [];
 let abilities = [];
 let editingAbilityId = null;
 let saveTimeout = null;
+let linkedSaveFileHandle = null;
+let activeSaveFileHandle = null;
+let fileSaveQueue = Promise.resolve();
 
 /* Perícias oficiais: atributo, orientação de uso e exemplo para consulta rápida. */
 const SKILLS = [
@@ -231,10 +237,73 @@ function setSaveStatus(message, state) {
   saveIndicator.classList.toggle("is-error", state === "error");
 }
 
-/* Salva o estado completo localmente e informa falhas de armazenamento. */
-function saveData() {
-  setSaveStatus("Salvando...", "saving");
-  const data = {
+/* Guarda no IndexedDB o acesso ao arquivo escolhido pelo jogador. */
+function openSaveFileDatabase() {
+  return new Promise((resolve, reject) => {
+    const request = window.indexedDB.open(FILE_HANDLE_DB, 1);
+    request.addEventListener("upgradeneeded", () => {
+      const database = request.result;
+      if (!database.objectStoreNames.contains(FILE_HANDLE_STORE)) {
+        database.createObjectStore(FILE_HANDLE_STORE);
+      }
+    });
+    request.addEventListener("success", () => resolve(request.result), { once: true });
+    request.addEventListener("error", () => reject(request.error || new Error("Não foi possível acessar o armazenamento do navegador.")), { once: true });
+  });
+}
+
+async function loadSaveFileHandle() {
+  const database = await openSaveFileDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(FILE_HANDLE_STORE, "readonly");
+    const request = transaction.objectStore(FILE_HANDLE_STORE).get(FILE_HANDLE_KEY);
+    request.addEventListener("success", () => {
+      database.close();
+      resolve(request.result || null);
+    }, { once: true });
+    request.addEventListener("error", () => {
+      database.close();
+      reject(request.error || new Error("Não foi possível recuperar o arquivo vinculado."));
+    }, { once: true });
+  });
+}
+
+async function storeSaveFileHandle(handle) {
+  const database = await openSaveFileDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(FILE_HANDLE_STORE, "readwrite");
+    transaction.objectStore(FILE_HANDLE_STORE).put(handle, FILE_HANDLE_KEY);
+    transaction.addEventListener("complete", () => {
+      database.close();
+      resolve();
+    }, { once: true });
+    transaction.addEventListener("error", () => {
+      database.close();
+      reject(transaction.error || new Error("Não foi possível lembrar o arquivo escolhido."));
+    }, { once: true });
+    transaction.addEventListener("abort", () => {
+      database.close();
+      reject(transaction.error || new Error("O vínculo com o arquivo foi interrompido."));
+    }, { once: true });
+  });
+}
+
+function updateSaveFileButton() {
+  const button = document.querySelector("#save-file-button");
+  if (activeSaveFileHandle) {
+    button.textContent = "▣ Arquivo vinculado";
+    button.title = "O salvamento automático no arquivo do PC está ativo. Clique para reconectar.";
+  } else if (linkedSaveFileHandle) {
+    button.textContent = "▣ Reconectar arquivo";
+    button.title = "Autorize novamente o arquivo escolhido para continuar salvando no PC.";
+  } else {
+    button.textContent = "▣ Salvar no PC";
+    button.title = "Escolha um arquivo JSON para salvar as alterações automaticamente neste PC.";
+  }
+}
+
+function createCharacterData() {
+  return {
     version: 1,
     savedAt: new Date().toISOString(),
     fields: collectFields(),
@@ -243,10 +312,164 @@ function saveData() {
     abilities,
     theme: document.body.classList.contains("light-theme") ? "light" : "dark"
   };
+}
+
+function normalizeCharacterData(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)
+    || !data.fields || typeof data.fields !== "object" || Array.isArray(data.fields)) {
+    throw new Error("O arquivo não possui o formato de ficha esperado.");
+  }
+  if (data.photo && (typeof data.photo !== "string" || !data.photo.startsWith("data:image/"))) {
+    throw new Error("O retrato incluído no arquivo é inválido.");
+  }
+  if (data.inventory !== undefined && (!Array.isArray(data.inventory) || !data.inventory.every(isValidInventoryItem))) {
+    throw new Error("A lista de inventário no arquivo é inválida.");
+  }
+  if (data.abilities !== undefined && (!Array.isArray(data.abilities) || !data.abilities.every(isValidAbility))) {
+    throw new Error("A lista de habilidades no arquivo é inválida.");
+  }
+  return {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    fields: data.fields,
+    photo: data.photo || "",
+    inventory: data.inventory || [],
+    abilities: data.abilities || [],
+    theme: data.theme === "light" ? "light" : "dark"
+  };
+}
+
+async function readCharacterFile(handle) {
+  const file = await handle.getFile();
+  const text = await file.text();
+  if (!text.trim()) return null;
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (error) {
+    throw new Error("O arquivo escolhido não contém um JSON válido.");
+  }
+  return normalizeCharacterData(data);
+}
+
+function applyCharacterData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  loadData();
+}
+
+async function writeCharacterFile(handle, data) {
+  const writable = await handle.createWritable();
+  await writable.write(JSON.stringify(data, null, 2));
+  await writable.close();
+}
+
+/* Serializa gravações para evitar que uma edição sobrescreva outra. */
+function queueFileSave(data) {
+  fileSaveQueue = fileSaveQueue.then(async () => {
+    if (!activeSaveFileHandle) return;
+    await writeCharacterFile(activeSaveFileHandle, data);
+    const time = new Intl.DateTimeFormat("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(new Date());
+    setSaveStatus(`Salvo no PC às ${time}`, "saved");
+  }).catch((error) => {
+    console.error("Não foi possível salvar as alterações no arquivo do PC.", error);
+    activeSaveFileHandle = null;
+    updateSaveFileButton();
+    setSaveStatus("Falha ao salvar no PC — reconecte o arquivo", "error");
+  });
+}
+
+async function connectSaveFile() {
+  if (!window.showSaveFilePicker || !window.indexedDB) {
+    const message = "Este navegador não permite salvamento automático direto em arquivos. Use Exportar ficha JSON para baixar uma cópia.";
+    setSaveStatus("Salvamento direto indisponível neste navegador", "error");
+    window.alert(message);
+    return;
+  }
+
+  try {
+    let handle = linkedSaveFileHandle;
+    if (!handle) {
+      handle = await window.showSaveFilePicker({
+        suggestedName: "eter-abismo-ficha.json",
+        types: [{
+          description: "Arquivo JSON da ficha",
+          accept: { "application/json": [".json"] }
+        }]
+      });
+    }
+
+    const permission = await handle.requestPermission({ mode: "readwrite" });
+    if (permission !== "granted") {
+      throw new Error("A permissão para gravar no arquivo não foi concedida.");
+    }
+
+    const fileData = await readCharacterFile(handle);
+    await storeSaveFileHandle(handle);
+    linkedSaveFileHandle = handle;
+    activeSaveFileHandle = handle;
+    updateSaveFileButton();
+
+    if (fileData) {
+      applyCharacterData(fileData);
+      setSaveStatus("Ficha carregada do arquivo do PC", "saved");
+    } else {
+      await writeCharacterFile(handle, createCharacterData());
+      setSaveStatus("Arquivo do PC conectado e salvo", "saved");
+    }
+  } catch (error) {
+    if (error.name === "AbortError") return;
+    console.error("Não foi possível conectar o arquivo da ficha.", error);
+    setSaveStatus("Não foi possível conectar o arquivo", "error");
+    window.alert(`Não foi possível conectar o arquivo: ${error.message}`);
+  }
+}
+
+/* Recupera o arquivo vinculado e carrega seus dados quando há permissão. */
+async function restoreLinkedSaveFile() {
+  if (!window.indexedDB) return;
+  try {
+    linkedSaveFileHandle = await loadSaveFileHandle();
+    updateSaveFileButton();
+    if (!linkedSaveFileHandle) return;
+
+    const permission = await linkedSaveFileHandle.queryPermission({ mode: "readwrite" });
+    if (permission !== "granted") {
+      setSaveStatus("Reconecte o arquivo para salvar no PC", "saved");
+      return;
+    }
+
+    const fileData = await readCharacterFile(linkedSaveFileHandle);
+    activeSaveFileHandle = linkedSaveFileHandle;
+    updateSaveFileButton();
+    if (fileData) {
+      applyCharacterData(fileData);
+      setSaveStatus("Ficha carregada do arquivo do PC", "saved");
+    } else {
+      await writeCharacterFile(activeSaveFileHandle, createCharacterData());
+      setSaveStatus("Arquivo do PC conectado e salvo", "saved");
+    }
+  } catch (error) {
+    console.error("Não foi possível restaurar o arquivo vinculado à ficha.", error);
+    setSaveStatus("Não foi possível ler o arquivo do PC — reconecte", "error");
+  }
+}
+
+/* Salva o estado completo localmente e informa falhas de armazenamento. */
+function saveData() {
+  setSaveStatus("Salvando...", "saving");
+  const data = createCharacterData();
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    setSaveStatus("Dados salvos localmente", "saved");
+    if (activeSaveFileHandle) {
+      setSaveStatus("Salvando no arquivo do PC...", "saving");
+      queueFileSave(data);
+    } else {
+      setSaveStatus("Dados salvos no navegador", "saved");
+    }
   } catch (error) {
     console.error("Não foi possível salvar a ficha no armazenamento local.", error);
     setSaveStatus("Falha ao salvar — armazenamento cheio", "error");
@@ -541,29 +764,8 @@ function importCharacter(event) {
   reader.addEventListener("load", () => {
     try {
       const importedData = JSON.parse(String(reader.result));
-      if (!importedData || typeof importedData !== "object" || Array.isArray(importedData)
-        || !importedData.fields || typeof importedData.fields !== "object" || Array.isArray(importedData.fields)) {
-        throw new Error("O arquivo não possui o formato de ficha esperado.");
-      }
-      if (importedData.photo && (typeof importedData.photo !== "string" || !importedData.photo.startsWith("data:image/"))) {
-        throw new Error("O retrato incluído no arquivo é inválido.");
-      }
-      if (importedData.inventory !== undefined && (!Array.isArray(importedData.inventory) || !importedData.inventory.every(isValidInventoryItem))) {
-        throw new Error("A lista de inventário no arquivo é inválida.");
-      }
-      if (importedData.abilities !== undefined && (!Array.isArray(importedData.abilities) || !importedData.abilities.every(isValidAbility))) {
-        throw new Error("A lista de habilidades no arquivo é inválida.");
-      }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        version: 1,
-        savedAt: new Date().toISOString(),
-        fields: importedData.fields,
-        photo: importedData.photo || "",
-        inventory: importedData.inventory || [],
-        abilities: importedData.abilities || [],
-        theme: importedData.theme === "light" ? "light" : "dark"
-      }));
-      loadData();
+      applyCharacterData(normalizeCharacterData(importedData));
+      saveData();
       setSaveStatus("Ficha importada com sucesso", "saved");
     } catch (error) {
       console.error("Não foi possível importar a ficha.", error);
@@ -700,11 +902,13 @@ function initializeCharacterSheet() {
     document.body.classList.toggle("light-theme");
     saveData();
   });
+  document.querySelector("#save-file-button").addEventListener("click", connectSaveFile);
   document.querySelector("#clear-button").addEventListener("click", clearCharacter);
   document.querySelector("#print-button").addEventListener("click", () => window.print());
   document.querySelector("#export-button").addEventListener("click", exportCharacter);
   document.querySelector("#import-button").addEventListener("click", () => document.querySelector("#import-file").click());
   document.querySelector("#import-file").addEventListener("change", importCharacter);
+  restoreLinkedSaveFile();
 }
 
 /* Executa somente após o DOM estar pronto para receber eventos. */

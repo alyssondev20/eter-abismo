@@ -123,9 +123,14 @@ h1, h2, p { margin-top: 0; }
 .page-heading h1 { margin: 0; font-family: var(--heading-font); font-size: clamp(32px, 4vw, 43px); font-weight: 600; letter-spacing: .015em; line-height: 1.05; }
 .page-heading h1 em { color: var(--bronze-light); font-style: normal; }
 .heading-subtitle { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
+.save-tools { display: grid; grid-template-columns: auto auto; align-items: center; justify-content: end; gap: 5px 12px; }
 .save-indicator { display: flex; align-items: center; gap: 8px; padding-bottom: 3px; color: var(--muted); font-size: 10px; }
 .save-indicator.is-saving .save-led { background: var(--bronze-light); box-shadow: 0 0 10px rgba(211, 163, 60, .55); }
 .save-indicator.is-error .save-led { background: var(--red); box-shadow: 0 0 10px rgba(232, 90, 84, .55); }
+.save-file-button { flex: 0 0 auto; min-height: 30px; padding: 0 9px; font-size: 9px; }
+.save-file-button span { font-size: 14px; }
+.save-file-button { white-space: nowrap; }
+.save-file-help { grid-column: 1 / -1; color: var(--faint); font-size: 8px; text-align: right; }
 
 /* Cartões, cabeçalhos internos e contornos */
 .panel {
@@ -503,7 +508,7 @@ h1, h2, p { margin-top: 0; }
   :root, body.light-theme { color-scheme: light; --page: #fff; --panel: #fff; --panel-raised: #eee; --panel-soft: #fafafa; --line: #ccc; --line-bright: #aaa; --text: #111; --muted: #444; --faint: #777; }
   body { background: #fff; color: #111; font-size: 10px; }
   .topbar { padding: 8px 0; }
-  .toolbar, .save-indicator, .photo-upload, .text-button, .outline-button, .ability-actions, .ability-dialog, .skill-upgrades { display: none !important; }
+  .toolbar, .save-indicator, .save-file-button, .save-file-help, .photo-upload, .text-button, .outline-button, .ability-actions, .ability-dialog, .skill-upgrades { display: none !important; }
   .page-shell { width: 100%; }
   .page-heading { padding: 16px 0 10px; }
   .panel { break-inside: avoid; box-shadow: none; }

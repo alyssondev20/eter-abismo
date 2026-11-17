@@ -56,8 +56,14 @@
         <h1 id="page-title">Ficha do <em>Jogador</em></h1>
         <p class="heading-subtitle">O desconhecido deixa marcas. Registre cada uma delas.</p>
       </div>
-      <div class="save-indicator" role="status" aria-live="polite">
-        <span class="save-led"></span><span id="save-status">Dados salvos localmente</span>
+      <div class="save-tools">
+        <div class="save-indicator" role="status" aria-live="polite">
+          <span class="save-led"></span><span id="save-status">Dados salvos no navegador</span>
+        </div>
+        <button class="outline-button save-file-button" id="save-file-button" type="button" title="Escolha um arquivo JSON para salvar as alterações automaticamente neste PC">
+          <span aria-hidden="true">▣</span> Salvar no PC
+        </button>
+        <small class="save-file-help">Escolha onde guardar o JSON. Requer Chrome ou Edge.</small>
       </div>
     </section>
 
