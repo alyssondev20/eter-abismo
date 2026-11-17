@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <!-- Metadados e recursos da ficha -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101214">
+  <meta name="description" content="Ficha digital de investigador para Éter & Abismo.">
+  <title>Éter &amp; Abismo | Ficha do Jogador</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Cabeçalho, relógio e ações gerais -->
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Éter e Abismo, início">
+      <span class="brand-mark" aria-hidden="true"><span></span></span>
+      <span class="brand-copy">
+        <strong>ÉTER <i>&amp;</i> ABISMO</strong>
+        <small>ARQUIVO DE INVESTIGAÇÃO</small>
+      </span>
+    </a>
+    <div class="topbar-right">
+      <div class="chronometer" aria-label="Data e hora atuais">
+        <span class="live-dot" aria-hidden="true"></span>
+        <span><strong id="digital-clock">--:--:--</strong><small id="current-date">Carregando data...</small></span>
+      </div>
+      <div class="toolbar" aria-label="Ações da ficha">
+        <button class="icon-button" id="theme-toggle" type="button" aria-label="Alternar tema" title="Alternar tema">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.3A8.5 8.5 0 0 1 8.7 3.8 8.5 8.5 0 1 0 20.2 15.3Z"/></svg>
+        </button>
+        <button class="icon-button" id="import-button" type="button" aria-label="Importar ficha" title="Importar ficha JSON">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 0L7.5 7.5M12 3l4.5 4.5M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>
+        </button>
+        <input id="import-file" class="visually-hidden" type="file" accept=".json,application/json" aria-label="Selecionar arquivo JSON">
+        <button class="icon-button" id="export-button" type="button" aria-label="Exportar ficha" title="Exportar ficha JSON">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 16v4h16v-4"/></svg>
+        </button>
+        <button class="icon-button" id="print-button" type="button" aria-label="Imprimir ficha" title="Imprimir ficha">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8V3h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7zM17 11h.01"/></svg>
+        </button>
+        <button class="icon-button danger-hover" id="clear-button" type="button" aria-label="Limpar ficha" title="Limpar ficha">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo principal da ficha -->
+  <main class="page-shell">
+    <section class="page-heading" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow"><span class="eyebrow-line"></span> REGISTRO DE CAMPO <span class="eyebrow-code">Nº 0084-A</span></p>
+        <h1 id="page-title">Ficha do <em>Jogador</em></h1>
+        <p class="heading-subtitle">O desconhecido deixa marcas. Registre cada uma delas.</p>
+      </div>
+      <div class="save-indicator" role="status" aria-live="polite">
+        <span class="save-led"></span><span id="save-status">Dados salvos localmente</span>
+      </div>
+    </section>
+
+    <form id="character-form" autocomplete="off">
+      <!-- Identificação e retrato do personagem -->
+      <section class="identity-card panel" aria-labelledby="identity-title">
+        <div class="portrait-column">
+          <div class="portrait-frame" id="portrait-frame">
+            <img id="character-photo" alt="Retrato do personagem" hidden>
+            <div class="portrait-placeholder" id="portrait-placeholder">
+              <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="16" r="8"/><path d="M8 42c0-9 7-15 16-15s16 6 16 15"/></svg>
+              <span>SEM RETRATO</span>
+            </div>
+            <label class="photo-upload" for="photo-input" title="Enviar foto" aria-label="Enviar foto do personagem">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L8 8m4-4 4 4M4 15v4h16v-4"/></svg>
+            </label>
+            <input id="photo-input" class="visually-hidden" type="file" accept="image/*">
+          </div>
+          <span class="portrait-caption">FOTO DO PERSONAGEM</span>
+          <button type="button" class="text-button" id="remove-photo">Remover retrato</button>
+        </div>
+        <div class="identity-content">
+          <div class="section-title-row">
+            <div><p class="eyebrow">IDENTIFICAÇÃO</p><h2 id="identity-title">Dados do personagem</h2></div>
+            <span class="record-badge"><span></span> ARQUIVO ATIVO</span>
+          </div>
+          <div class="field-grid identity-grid">
+            <label class="field identity-feature"><span>Nome do personagem</span><input data-field="name" type="text" placeholder="Nome do personagem"></label>
+            <label class="field identity-feature"><span>Jogador</span><input data-field="player" type="text" placeholder="Nome do jogador"></label>
+            <label class="field identity-feature"><span>Origem / Passado</span><input data-field="origin" type="text" placeholder="De onde veio?"></label>
+            <div class="field identity-feature">
+              <span>Idade / Aparência</span>
+              <div class="age-appearance-inputs">
+                <div class="input-suffix"><input data-field="age" type="number" min="0" max="130" placeholder="—" aria-label="Idade"><small>anos</small></div>
+                <input data-field="appearance" type="text" placeholder="Descrição da aparência" aria-label="Aparência">
+              </div>
+            </div>
+            <label class="field identity-feature"><span>Motivação principal</span><input data-field="motivation" type="text" placeholder="O que move o personagem?"></label>
+            <label class="field identity-feature"><span>Segredo / Cicatriz</span><input data-field="secret" type="text" placeholder="Algo que prefere esconder"></label>
+            <label class="field identity-detail"><span>Sexo</span><select data-field="sex"><option value="">Selecionar</option><option>Masculino</option><option>Feminino</option></select></label>
+            <label class="field identity-detail"><span>Altura</span><div class="input-suffix"><input data-field="height" type="number" min="0" step="0.01" placeholder="—"><small>m</small></div></label>
+            <label class="field identity-detail"><span>Peso</span><div class="input-suffix"><input data-field="weight" type="number" min="0" step="0.1" placeholder="—"><small>kg</small></div></label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Atributos do sistema com explicações interativas -->
+      <section class="panel section-panel" aria-labelledby="attributes-title">
+        <div class="section-title-row section-heading">
+          <div><p class="eyebrow">CAPACIDADES NATURAIS</p><h2 id="attributes-title">Atributos</h2></div>
+          <span class="section-index">02 <i>/ 05</i></span>
+        </div>
+        <div class="attributes-grid">
+          <div class="attribute" data-attribute="physical">
+            <span class="attribute-glyph" aria-hidden="true">F</span>
+            <div class="attribute-info">
+              <button class="attribute-name-button" type="button" data-attribute-info aria-expanded="false" aria-controls="attribute-tip-physical">Físico <span aria-hidden="true">i</span></button>
+              <div class="attribute-tooltip" id="attribute-tip-physical" role="tooltip" hidden>Força bruta, resistência e briga.</div>
+            </div>
+            <div class="stepper"><button type="button" data-step="-1" aria-label="Diminuir Físico">−</button><input id="attr-physical" data-field="character-attribute-physical" type="number" min="-99" max="99" step="1" value="0" aria-label="Valor de Físico"><button type="button" data-step="1" aria-label="Aumentar Físico">+</button></div>
+          </div>
+          <div class="attribute" data-attribute="agility">
+            <span class="attribute-glyph" aria-hidden="true">A</span>
+            <div class="attribute-info">
+              <button class="attribute-name-button" type="button" data-attribute-info aria-expanded="false" aria-controls="attribute-tip-agility">Agilidade <span aria-hidden="true">i</span></button>
+              <div class="attribute-tooltip" id="attribute-tip-agility" role="tooltip" hidden>Tiros, reflexos e furtividade.</div>
+            </div>
+            <div class="stepper"><button type="button" data-step="-1" aria-label="Diminuir Agilidade">−</button><input id="attr-agility" data-field="character-attribute-agility" type="number" min="-99" max="99" step="1" value="0" aria-label="Valor de Agilidade"><button type="button" data-step="1" aria-label="Aumentar Agilidade">+</button></div>
+          </div>
+          <div class="attribute" data-attribute="intellect">
+            <span class="attribute-glyph" aria-hidden="true">I</span>
+            <div class="attribute-info">
+              <button class="attribute-name-button" type="button" data-attribute-info aria-expanded="false" aria-controls="attribute-tip-intellect">Intelecto <span aria-hidden="true">i</span></button>
+              <div class="attribute-tooltip" id="attribute-tip-intellect" role="tooltip" hidden>Engenharia, investigação e ocultismo.</div>
+            </div>
+            <div class="stepper"><button type="button" data-step="-1" aria-label="Diminuir Intelecto">−</button><input id="attr-intellect" data-field="character-attribute-intellect" type="number" min="-99" max="99" step="1" value="0" aria-label="Valor de Intelecto"><button type="button" data-step="1" aria-label="Aumentar Intelecto">+</button></div>
+          </div>
+          <div class="attribute" data-attribute="perception">
+            <span class="attribute-glyph" aria-hidden="true">P</span>
+            <div class="attribute-info">
+              <button class="attribute-name-button" type="button" data-attribute-info aria-expanded="false" aria-controls="attribute-tip-perception">Percepção <span aria-hidden="true">i</span></button>
+              <div class="attribute-tooltip" id="attribute-tip-perception" role="tooltip" hidden>Sentidos, prontidão e intuição.</div>
+            </div>
+            <div class="stepper"><button type="button" data-step="-1" aria-label="Diminuir Percepção">−</button><input id="attr-perception" data-field="character-attribute-perception" type="number" min="-99" max="99" step="1" value="0" aria-label="Valor de Percepção"><button type="button" data-step="1" aria-label="Aumentar Percepção">+</button></div>
+          </div>
+          <div class="attribute" data-attribute="will">
+            <span class="attribute-glyph" aria-hidden="true">V</span>
+            <div class="attribute-info">
+              <button class="attribute-name-button" type="button" data-attribute-info aria-expanded="false" aria-controls="attribute-tip-will">Vontade <span aria-hidden="true">i</span></button>
+              <div class="attribute-tooltip" id="attribute-tip-will" role="tooltip" hidden>Autocontrole, persuasão e mente.</div>
+            </div>
+            <div class="stepper"><button type="button" data-step="-1" aria-label="Diminuir Vontade">−</button><input id="attr-will" data-field="character-attribute-will" type="number" min="-99" max="99" step="1" value="0" aria-label="Valor de Vontade"><button type="button" data-step="1" aria-label="Aumentar Vontade">+</button></div>
+          </div>
+        </div>
+        <div class="attribute-summary" aria-live="polite">
+          <span>SOMA DOS ATRIBUTOS</span>
+          <strong id="attribute-total">+0</strong>
+          <small>Meta: +3 — distribua +2, +1, +1, 0 e -1.</small>
+        </div>
+        </div>
+      </section>
+
+      <!-- Recursos do personagem, valores de campo e condição atual -->
+      <section class="panel section-panel" aria-labelledby="resources-title">
+        <div class="section-title-row section-heading">
+          <div><p class="eyebrow">ESTADO VITAL E RECURSOS DE CAMPO</p><h2 id="resources-title">Recursos do personagem</h2></div>
+          <span class="section-index">03 <i>/ 07</i></span>
+        </div>
+        <div class="resources-grid">
+          <div class="resource-card health" data-resource="vigor">
+            <div class="resource-top"><span class="resource-icon">✚</span><span class="resource-label">Vigor (Vida)</span></div>
+            <div class="resource-values"><label><span>ATUAL</span><input data-field="resource-vigor-current" type="number" min="0" value="10" aria-label="Vigor atual"></label><b>/</b><label><span>MÁXIMO</span><input data-field="resource-vigor-max" type="number" min="1" value="10" aria-label="Vigor máximo" readonly title="Calculado: base 10 + Físico"></label></div>
+            <div class="bar-track"><span class="resource-bar"></span></div>
+            <p class="resource-description">Base 10 + Físico. Em 0, à beira da morte.</p>
+          </div>
+          <div class="resource-card sanity" data-resource="lucidity">
+            <div class="resource-top"><span class="resource-icon">◈</span><span class="resource-label">Lucidez (Sanidade)</span></div>
+            <div class="resource-values"><label><span>ATUAL</span><input data-field="resource-lucidity-current" type="number" min="0" value="10" aria-label="Lucidez atual"></label><b>/</b><label><span>MÁXIMO</span><input data-field="resource-lucidity-max" type="number" min="1" value="10" aria-label="Lucidez máxima" readonly title="Calculado: base 10 + Vontade"></label></div>
+            <div class="bar-track"><span class="resource-bar"></span></div>
+            <p class="resource-description">Base 10 + Vontade. Em 0, colapso mental.</p>
+          </div>
+          <div class="resource-card corruption" data-resource="distortion">
+            <div class="resource-top"><span class="resource-icon">⌁</span><span class="resource-label">Distorção (Implantes)</span></div>
+            <div class="resource-values"><label><span>ATUAL</span><input data-field="resource-distortion-current" type="number" min="0" value="0" aria-label="Distorção atual"></label><b>/</b><label><span>MÁXIMO</span><input data-field="resource-distortion-max" type="number" min="1" value="10" aria-label="Limite de distorção"></label></div>
+            <div class="bar-track"><span class="resource-bar"></span></div>
+            <p class="resource-description">Registre a soma dos implantes. 10 é o limite.</p>
+          </div>
+          <div class="resource-card energy" data-resource="energy">
+            <div class="resource-top"><span class="resource-icon">ϟ</span><span class="resource-label">Energia</span></div>
+            <div class="resource-values"><label><span>ATUAL</span><input data-field="resource-energy-current" type="number" min="0" value="10" aria-label="Energia atual"></label><b>/</b><label><span>MÁXIMO</span><input data-field="resource-energy-max" type="number" min="1" value="10" aria-label="Energia máxima"></label></div>
+            <div class="bar-track"><span class="resource-bar"></span></div>
+            <p class="resource-description">Energia disponível para ações e equipamentos.</p>
+          </div>
+          <div class="resource-card experience">
+            <div class="resource-top"><span class="resource-icon">✧</span><span class="resource-label">XP disponível</span></div>
+            <div class="resource-single-value"><input data-field="resource-xp" type="number" min="0" value="0" aria-label="XP disponível"><span>XP</span></div>
+            <p class="resource-description">Ganhe por sessão; gaste em perícias e rituais.</p>
+          </div>
+          <div class="resource-card money">
+            <div class="resource-top"><span class="resource-icon">£</span><span class="resource-label">Libras / Dinheiro</span></div>
+            <div class="resource-single-value"><span>£</span><input data-field="resource-money" type="number" min="0" step="0.01" value="120" aria-label="Libras ou dinheiro"></div>
+            <p class="resource-description">Orçamento inicial padrão: £120.</p>
+          </div>
+          <div class="resource-card armor">
+            <div class="resource-top"><span class="resource-icon">⬡</span><span class="resource-label">Armadura total</span></div>
+            <div class="resource-single-value"><input data-field="resource-armor" type="number" min="0" value="0" aria-label="Armadura total"></div>
+            <p class="resource-description">Reduz o dano físico sofrido por roupas e implantes.</p>
+          </div>
+        </div>
+        <div class="condition-panel" aria-labelledby="condition-title">
+          <div class="condition-heading">
+            <div><p class="eyebrow">CONDIÇÃO DO PERSONAGEM</p><h3 id="condition-title">C.D.P.</h3></div>
+            <span class="condition-hint">Selecione todas as condições aplicáveis</span>
+          </div>
+          <div class="condition-options">
+            <label class="condition-chip"><input data-field="condition-fear" type="checkbox"><span>Medo</span></label>
+            <label class="condition-chip"><input data-field="condition-dead" type="checkbox"><span>Morto</span></label>
+            <label class="condition-chip"><input data-field="condition-bleeding" type="checkbox"><span>Sangrando</span></label>
+            <label class="condition-chip"><input data-field="condition-insane" type="checkbox"><span>Insano</span></label>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <!-- Inventário editável -->
+      <section class="panel section-panel" aria-labelledby="inventory-title">
+        <div class="section-title-row section-heading">
+          <div><p class="eyebrow">PERTENCES REGISTRADOS</p><h2 id="inventory-title">Inventário</h2></div>
+          <button class="outline-button" type="button" id="add-item"><span>+</span> Adicionar item</button>
+        </div>
+        <div class="table-wrap">
+          <table class="inventory-table">
+            <thead><tr><th>Nome do item</th><th>Qtd.</th><th>Peso</th><th>Descrição</th><th aria-label="Ações"></th></tr></thead>
+            <tbody id="inventory-body"></tbody>
+          </table>
+          <div class="empty-state" id="inventory-empty"><span>◇</span><p>Nenhum item registrado.</p><small>Adicione equipamentos e pertences à ficha.</small></div>
+        </div>
+        <div class="inventory-foot"><span>ITENS REGISTRADOS</span><strong id="inventory-count">0 itens</strong></div>
+      </section>
+
+      <!-- Equipamentos e espaços dedicados -->
+      <section class="panel section-panel" aria-labelledby="equipment-title">
+        <div class="section-title-row section-heading">
+          <div><p class="eyebrow">CARGA DE CAMPO</p><h2 id="equipment-title">Equipamentos</h2></div>
+          <span class="section-index">03 <i>/ 07</i></span>
+        </div>
+        <div class="equipment-grid">
+          <label class="field equipment-field"><span><i class="equip-mark weapon"></i>Arma primária</span><input data-field="equipment-primary" type="text" placeholder="Nenhuma equipada"></label>
+          <label class="field equipment-field"><span><i class="equip-mark weapon"></i>Arma secundária</span><input data-field="equipment-secondary" type="text" placeholder="Nenhuma equipada"></label>
+          <label class="field equipment-field"><span><i class="equip-mark armor"></i>Armadura</span><input data-field="equipment-armor" type="text" placeholder="Nenhuma equipada"></label>
+          <label class="field equipment-field"><span><i class="equip-mark armor"></i>Capacete</span><input data-field="equipment-helmet" type="text" placeholder="Nenhum equipado"></label>
+          <label class="field equipment-field"><span><i class="equip-mark light"></i>Lanterna</span><input data-field="equipment-lantern" type="text" placeholder="Nenhuma equipada"></label>
+          <label class="field equipment-field"><span><i class="equip-mark mask"></i>Máscara</span><input data-field="equipment-mask" type="text" placeholder="Nenhuma equipada"></label>
+          <label class="field equipment-field equipment-wide"><span><i class="equip-mark tools"></i>Ferramentas</span><input data-field="equipment-tools" type="text" placeholder="Kit ou ferramentas de campo"></label>
+        </div>
+      </section>
+
+      <!-- Perícias oficiais com seleção inicial, evolução por XP e exemplos -->
+      <section class="panel section-panel" aria-labelledby="skills-title">
+        <div class="section-title-row section-heading">
+          <div><p class="eyebrow">SISTEMA ÉTER &amp; ABISMO</p><h2 id="skills-title">Perícias</h2></div>
+          <span class="skills-legend"><span>✓</span> ESCOLHA OU EVOLUA</span>
+        </div>
+        <p class="skill-formula">Rolagem padrão: <code>2d6 + atributo associado + bônus de perícia</code></p>
+        <p class="skill-rules">Escolha 4 perícias iniciais grátis (+1). Cada nova perícia custa 2 XP; cada aumento custa 1 XP por ponto, até +3. Ao remover uma perícia, o XP gasto nela é devolvido.</p>
+        <p class="skill-selection-status" id="skill-selection-status" role="status" aria-live="polite"></p>
+        <div class="skills-grid" id="skills-list"></div>
+      </section>
+
+      <!-- Habilidades especiais com edição dinâmica -->
+      <section class="panel section-panel" aria-labelledby="abilities-title">
+        <div class="section-title-row section-heading">
+          <div><p class="eyebrow">APTIDÕES EXTRAORDINÁRIAS</p><h2 id="abilities-title">Habilidades especiais</h2></div>
+          <button class="outline-button" type="button" id="add-ability"><span>+</span> Nova habilidade</button>
+        </div>
+        <div class="abilities-list" id="abilities-list"></div>
+        <div class="empty-state abilities-empty" id="abilities-empty"><span>✧</span><p>Nenhuma habilidade registrada.</p><small>Adicione talentos, rituais ou poderes.</small></div>
+      </section>
+
+      <!-- Anotações persistidas automaticamente -->
+      <section class="panel section-panel notes-panel" aria-labelledby="notes-title">
+        <div class="section-title-row section-heading">
+          <div><p class="eyebrow">DIÁRIO DE CAMPO</p><h2 id="notes-title">Anotações</h2></div>
+          <span class="autosave-note"><span class="save-led"></span> Salvamento automático</span>
+        </div>
+        <label class="visually-hidden" for="notes-field">Anotações da investigação</label>
+        <textarea id="notes-field" data-field="notes" rows="8" placeholder="Pistas, contatos, acontecimentos inexplicáveis..."></textarea>
+        <div class="notes-footer"><span>REGISTROS PRIVADOS DO INVESTIGADOR</span><span id="notes-count">0 caracteres</span></div>
+      </section>
+    </form>
+
+    <!-- Guia rápido de criação e rolagem para consulta durante o jogo -->
+    <section class="quick-guide panel" id="quick-guide" aria-labelledby="quick-guide-title">
+      <div class="guide-heading">
+        <div><p class="eyebrow">CONSULTA RÁPIDA</p><h2 id="quick-guide-title">Monte seu personagem</h2></div>
+        <span class="guide-time">6 PASSOS <i>•</i> SEM COMPLICAÇÃO</span>
+      </div>
+      <ol class="guide-steps">
+        <li class="guide-step"><span class="guide-number">01</span><div><h3>Conceito</h3><p>Sem classes fixas: escolha um passado e uma motivação.</p></div></li>
+        <li class="guide-step"><span class="guide-number">02</span><div><h3>Atributos</h3><p>Distribua <strong>+2, +1, +1, 0 e −1</strong>. A soma deve ser +3.</p></div></li>
+        <li class="guide-step"><span class="guide-number">03</span><div><h3>Recursos vitais</h3><p>Máximos automáticos: <strong>Vigor 10 + Físico</strong> e <strong>Lucidez 10 + Vontade</strong>. Ajuste o Atual ao começar.</p></div></li>
+        <li class="guide-step"><span class="guide-number">04</span><div><h3>Perícias</h3><p>Distribua <strong>6 pontos</strong>; nenhuma começa acima de +2. Marque as proficientes.</p></div></li>
+        <li class="guide-step"><span class="guide-number">05</span><div><h3>Habilidade inicial</h3><p>Escolha 1 habilidade gratuita ligada ao passado. Rituais cósmicos vêm durante a campanha.</p></div></li>
+        <li class="guide-step"><span class="guide-number">06</span><div><h3>Equipamento</h3><p>Comece com <strong>£120</strong>, arma básica grátis (até £50) e ferramenta grátis (até £30). Implantes: limite inicial de +2 Distorção.</p></div></li>
+      </ol>
+      <div class="guide-bottom">
+        <p class="guide-condition"><span class="guide-condition-mark">C.D.P.</span> Marque todas as condições do personagem que estiverem ativas.</p>
+        <div class="guide-roll"><span class="roll-label">ROLAGEM NO DISCORD</span><code>2d6 + total da perícia</code><span><b>≤ 6</b> Falha + complicação</span><span><b>7–9</b> Sucesso parcial</span><span><b>10+</b> Sucesso completo</span></div>
+      </div>
+    </section>
+
+    <!-- Rodapé de identificação do sistema -->
+    <footer class="page-footer"><span>ÉTER <i>&amp;</i> ABISMO</span><span>ARQUIVO CONFIDENCIAL <b>•</b> ACESSO RESTRITO</span><span>v1.0 <i>—</i> REGISTRO LOCAL</span></footer>
+  </main>
+
+  <!-- Diálogo acessível para criar e editar habilidades -->
+  <dialog id="ability-dialog" class="ability-dialog">
+    <form id="ability-form">
+      <div class="dialog-heading"><div><p class="eyebrow">REGISTRO DE CAMPO</p><h2 id="ability-dialog-title">Nova habilidade</h2></div><button class="icon-button" data-close-dialog type="button" aria-label="Fechar janela">×</button></div>
+      <label class="field"><span>Nome</span><input id="ability-name" type="text" maxlength="80" required placeholder="Nome da habilidade"></label>
+      <label class="field"><span>Descrição</span><textarea id="ability-description" rows="4" maxlength="1000" placeholder="Descreva os efeitos ou condições..."></textarea></label>
+      <div class="dialog-actions"><button class="outline-button" data-close-dialog type="button">Cancelar</button><button class="primary-button" id="save-ability" type="submit">Salvar habilidade</button></div>
+    </form>
+  </dialog>
+
+  <!-- Aplicação da lógica da ficha -->
+  <script src="script.js"></script>
+</body>
+</html>
